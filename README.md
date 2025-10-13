@@ -109,9 +109,4 @@ The following resources were used:
   * [cite\_start]**Generative AI**: `[e.g., OpenAI's ChatGPT was used to generate the function 'functionName' in 'file.js']` [cite: 33]
   * [cite\_start]**Help from Peer**: `[e.g., John Doe helped me debug the authentication logic.]` [cite: 33]
 
-## Tutor Feedback Session
 
-[cite\_start]As per the assignment requirements, the progress of this work was presented to a tutor to provide evidence of active work[cite: 14, 18].
-
-  * **Date of Presentation**: `[e.g., 28th November 2025 (Week 8)]`
-  * **Tutor**: `[Tutor's Name]`
