@@ -29,3 +29,55 @@
 .animate-scaleIn {
   animation: scaleIn 0.4s ease-out;
 }
+
+
+
+
+@layer utilities {
+  /* Animation for the small pop-ups */
+  .animate-popInFadeOut {
+    animation: popInFadeOut 1.2s ease-in-out forwards;
+  }
+  
+  /* Animation for the full-screen modals */
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  
+  .animate-scaleIn {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+
+  @keyframes popInFadeOut {
+    0% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    30% {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    80% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes scaleIn {
+    from { transform: scale(0.8); }
+    to { transform: scale(1); }
+  }
+}

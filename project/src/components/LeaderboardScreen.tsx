@@ -1,22 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Trophy, ArrowLeft, RotateCcw, Medal } from 'lucide-react';
-import { DifficultyLevel, LeaderboardEntry } from '../lib/supabaseClient'; // Assuming types are here
-import { getTopScores } from '../services/leaderboardService'; // Import the service function
+// src/components/LeaderboardScreen.tsx
+import { useState, useEffect } from 'react';
+import { getSupabaseClient, DifficultyLevel } from '../lib/supabaseClient';
+import { Trophy, BarChart, X, Play, Home } from 'lucide-react';
+import { Score } from '../services/leaderboardService';
+import Top3Animation from './Top3Animation'; // Import our new animation
 
 interface LeaderboardScreenProps {
-  playerName: string; // Current authenticated user's email
+  playerName: string;
   finalScore: number;
-  difficulty: DifficultyLevel; // Difficulty of the score just submitted
+  difficulty: DifficultyLevel;
   onPlayAgain: () => void;
   onMainMenu: () => void;
 }
-
-// Map for displaying difficulty titles and colors
-const DIFFICULTY_TABS: { level: DifficultyLevel; color: string; hover: string }[] = [
-    { level: 'easy', color: 'bg-green-500', hover: 'hover:bg-green-600' },
-    { level: 'medium', color: 'bg-yellow-500', hover: 'hover:bg-yellow-600' },
-    { level: 'hard', color: 'bg-red-500', hover: 'hover:bg-red-600' },
-];
 
 export default function LeaderboardScreen({ 
   playerName, 
@@ -26,134 +21,143 @@ export default function LeaderboardScreen({
   onMainMenu 
 }: LeaderboardScreenProps) {
   
-  const [activeDifficulty, setActiveDifficulty] = useState<DifficultyLevel>(difficulty);
-  const [scores, setScores] = useState<LeaderboardEntry[]>([]);
+  const [scores, setScores] = useState<Score[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showTop3, setShowTop3] = useState(false); // State for our animation
+  const [animationPlayed, setAnimationPlayed] = useState(false); // Ensure it only plays once
 
-  // --- Data Fetching Effect ---
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    
-    const fetchScores = async () => {
+    const fetchLeaderboard = async () => {
+      setLoading(true);
+      setError(null);
+      const supabase = getSupabaseClient();
+
       try {
-        const topScores = await getTopScores(activeDifficulty);
-        setScores(topScores);
-      } catch (err) {
-        // Log the error but show a user-friendly message
+        const { data, error } = await supabase
+          .from('leaderboard')
+          .select('*')
+          .eq('difficulty', difficulty) // Filter by the difficulty played
+          .order('score', { ascending: false })
+          .order('created_at', { ascending: true })
+          .limit(10);
+
+        if (error) throw error;
+
+        if (data) {
+          setScores(data);
+
+          // --- CHECK FOR TOP 3 ---
+          // Check if the current player's score is in the top 3
+          // We check the top 3 scores from the fetched data
+          if (!animationPlayed) {
+            const top3 = data.slice(0, 3);
+            
+            // Check if our exact score entry is in the top 3
+            const isTop3 = top3.some(entry => 
+              entry.player_name === playerName && entry.score === finalScore
+            );
+            
+            // Also check if the finalScore is *high enough*
+            // in case the DB update was slow and our score isn't in the list yet.
+            const thirdPlaceScore = top3.length === 3 ? top3[2].score : 0;
+            
+            if ((isTop3 || finalScore >= thirdPlaceScore) && finalScore > 0) {
+              setShowTop3(true); // Trigger the animation!
+              setAnimationPlayed(true); // Don't play it again
+            }
+          }
+        }
+      } catch (err: any) {
         console.error("Error fetching leaderboard:", err);
-        setError("Failed to load scores. Check your network or Supabase connection.");
-      } finally {
-        setLoading(false);
+        setError("Failed to fetch leaderboard. Please check your connection.");
       }
+      setLoading(false);
     };
 
-    fetchScores();
-  }, [activeDifficulty]); // Re-fetch whenever the tab changes
-
-  // --- Render Helpers ---
-
-  const getRankBadge = (index: number) => {
-    if (index === 0) return 'text-yellow-500';
-    if (index === 1) return 'text-gray-400';
-    if (index === 2) return 'text-amber-700';
-    return 'text-gray-500';
-  };
+    fetchLeaderboard();
+  }, [difficulty, playerName, finalScore, animationPlayed]); // Dependencies
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 flex flex-col items-center">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl p-6 md:p-10 my-8">
-        
-        <div className="text-center mb-8">
-          <Trophy className="w-12 h-12 text-yellow-600 mx-auto mb-2" />
-          <h1 className="text-4xl font-extrabold text-gray-800">Leaderboard</h1>
-        </div>
+    <>
+      {/* --- RENDER TOP 3 ANIMATION --- */}
+      {showTop3 && (
+        <Top3Animation onComplete={() => setShowTop3(false)} />
+      )}
 
-        {/* --- Player's Latest Score Card --- */}
-        <div className={`p-4 rounded-xl border-4 ${difficulty === 'hard' ? 'border-red-500' : difficulty === 'medium' ? 'border-yellow-500' : 'border-green-500'} bg-yellow-50 shadow-md mb-8`}>
-            <p className="text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2">
-                <Medal className="w-4 h-4" />
-                Your Latest Score ({difficulty.toUpperCase()})
-            </p>
-            <div className="flex justify-between items-baseline">
-                <p className="text-2xl font-bold text-gray-900 truncate">{playerName}</p>
-                <p className="text-3xl font-extrabold text-yellow-600">{finalScore}</p>
-            </div>
-        </div>
-
-        {/* --- Difficulty Tabs --- */}
-        <div className="flex justify-center space-x-2 mb-6 p-2 bg-gray-50 rounded-lg shadow-inner">
-          {DIFFICULTY_TABS.map(({ level, color, hover }) => (
-            <button
-              key={level}
-              onClick={() => setActiveDifficulty(level)}
-              className={`py-2 px-4 rounded-lg text-sm font-semibold capitalize transition-all duration-200 shadow-md ${
-                activeDifficulty === level
-                  ? `${color} text-white`
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {level}
-            </button>
-          ))}
-        </div>
-
-        {/* --- Leaderboard List --- */}
-        {loading && <p className="text-center py-8 text-gray-500">Loading top scores...</p>}
-        {error && <p className="text-center py-8 text-red-600 bg-red-100 rounded-lg">{error}</p>}
-        
-        {!loading && !error && (
-            <div className="space-y-3">
-            {scores.length === 0 ? (
-                <p className="text-center py-8 text-gray-500">No scores recorded yet for the {activeDifficulty} level.</p>
-            ) : (
-                scores.map((entry, index) => (
-                    <div
-                        key={entry.id}
-                        className={`flex justify-between items-center p-4 rounded-xl shadow-sm transition-all duration-150 ${
-                            entry.player_name === playerName && entry.score === finalScore && entry.difficulty === difficulty 
-                            ? 'bg-yellow-200 border-2 border-yellow-600 scale-[1.01]' 
-                            : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
-                        }`}
-                    >
-                        {/* Rank */}
-                        <div className="flex items-center w-1/4">
-                            <Medal className={`w-6 h-6 mr-3 ${getRankBadge(index)}`} fill="currentColor" />
-                            <span className="text-lg font-extrabold text-gray-700">{index + 1}</span>
-                        </div>
-                        
-                        {/* Name */}
-                        <p className="text-lg font-medium text-gray-800 w-1/2 truncate">{entry.player_name}</p>
-                        
-                        {/* Score */}
-                        <p className="text-xl font-extrabold w-1/4 text-right text-yellow-700">{entry.score}</p>
-                    </div>
-                ))
-            )}
-            </div>
-        )}
-
-        {/* --- Action Buttons --- */}
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-10">
-          <button
-            onClick={onPlayAgain}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-yellow-500 text-white font-bold rounded-lg hover:bg-yellow-600 transition shadow-md"
-          >
-            <RotateCcw className="w-5 h-5" />
-            Play Again ({difficulty.toUpperCase()})
-          </button>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-6 sm:p-10">
           
-          <button
-            onClick={onMainMenu}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition shadow-md"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Main Menu
-          </button>
+           {/* Header */}
+          <div className="text-center mb-6">
+            <h1 className="text-4xl font-bold text-gray-800 flex items-center justify-center gap-3">
+              <Trophy className="w-10 h-10 text-yellow-500" />
+              Leaderboard
+            </h1>
+            <p className="text-lg text-gray-600 mt-2 capitalize">
+              Top 10 Players - <span className="font-semibold">{difficulty}</span>
+            </p>
+          </div>
+
+          {/* Player's Final Score */}
+          <div className="bg-yellow-100 border-2 border-yellow-300 p-4 rounded-lg text-center mb-8 shadow-md">
+            <p className="text-xl font-medium text-yellow-800">Your Score, {playerName}:</p>
+            <p className="text-5xl font-bold text-yellow-900">{finalScore}</p>
+          </div>
+
+          {/* Leaderboard Table */}
+          <div className="space-y-3">
+            {loading && (
+              <div className="flex justify-center items-center h-40">
+                <BarChart className="w-12 h-12 text-gray-400 animate-pulse" />
+              </div>
+            )}
+            {error && (
+              <div className="flex justify-center items-center h-40 p-4 bg-red-100 text-red-700 rounded-lg">
+                <X className="w-8 h-8 mr-2" />
+                <p>{error}</p>
+              </div>
+            )}
+            {!loading && !error && (
+              <ol className="divide-y divide-gray-200">
+                {scores.map((score, index) => (
+                  <li key={score.id} className={`flex items-center justify-between p-3 rounded-md ${score.player_name === playerName && score.score === finalScore ? 'bg-yellow-50' : ''}`}>
+                    <div className="flex items-center">
+                      <span className={`text-lg font-bold w-8 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-500' : index === 2 ? 'text-yellow-700' : 'text-gray-400'}`}>
+                        {index + 1}
+                      </span>
+                      <span className="text-lg font-medium text-gray-800 ml-3">{score.player_name}</span>
+                    </div>
+                    <span className="text-xl font-bold text-gray-900">{score.score}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+            {!loading && !error && scores.length === 0 && (
+              <p className="text-center text-gray-500 py-6">No scores yet. Be the first!</p>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="mt-10 flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={onPlayAgain}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transition"
+            >
+              <Play className="w-5 h-5" />
+              Play Again
+            </button>
+            <button
+              onClick={onMainMenu}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition"
+            >
+              <Home className="w-5 h-5" />
+              Main Menu
+            </button>
+          </div>
+
         </div>
-        
       </div>
-    </div>
+    </>
   );
 }

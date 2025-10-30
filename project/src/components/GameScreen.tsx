@@ -1,16 +1,16 @@
+// src/components/GameScreen.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { DifficultyLevel } from '../lib/supabaseClient';
-import { Clock, Timer, Banana, Brain } from 'lucide-react';
+import { DifficultyLevel, getSupabaseClient } from '../lib/supabaseClient';
+import { Clock, Timer, Banana, Brain, Heart } from 'lucide-react';
+import LevelUpAnimation from './LevelUpAnimation';
+import GameNotification from './GameNotification';
 
-// API details - Fetches directly, no proxy
-const API_BASE_URL = 'https://marcconrad.com/uob/banana/api.php?out=json';
-
-// Difficulty settings (reused for the timer)
 const DIFFICULTY_SETTINGS: Record<DifficultyLevel, number> = {
   easy: 30,
   medium: 20,
   hard: 10,
 };
+const POINTS_PER_LEVEL = 50;
 
 interface GameScreenProps {
   playerName: string;
@@ -18,17 +18,21 @@ interface GameScreenProps {
   onGameEnd: (finalScore: number) => void;
 }
 
-// Define the state for a single question from the API
-// Note: The component state uses 'image', but the API provides 'question'
 interface Question {
   image: string;
-  solution: number;
+  answerToken: string;
 }
+
+// Add a unique, stable 'id' to the notification
+type Notification = {
+  id: number; // <-- ADD THIS
+  type: 'correct' | 'wrong' | 'combo';
+  message: string;
+} | null;
 
 export default function GameScreen({ playerName, difficulty, onGameEnd }: GameScreenProps) {
   const initialTime = DIFFICULTY_SETTINGS[difficulty];
 
-  // --- New State for Guessing Game ---
   const [question, setQuestion] = useState<Question | null>(null);
   const [userGuess, setUserGuess] = useState('');
   const [score, setScore] = useState(0);
@@ -36,123 +40,144 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [isGameActive, setIsGameActive] = useState(true);
+  const [lives, setLives] = useState(3);
+  
+  const [level, setLevel] = useState(1);
+  const [comboCount, setComboCount] = useState(0);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [notification, setNotification] = useState<Notification>(null);
 
-  // Refs for stable timer/game end logic
   const submissionRef = useRef(false);
   const scoreRef = useRef(score);
   const onGameEndRef = useRef(onGameEnd);
 
-  // Keep refs updated with current state
   useEffect(() => { scoreRef.current = score; }, [score]);
   useEffect(() => { onGameEndRef.current = onGameEnd; }, [onGameEnd]);
 
+  const handleLifeLoss = (reason: string) => {
+    if (!isGameActive || submissionRef.current) return;
 
-  // --- 1. Fetch Question Logic (Corrected) ---
+    // ADD ID TO NOTIFICATION
+    setNotification({ id: new Date().getTime(), type: 'wrong', message: reason });
+    setComboCount(0); // Reset combo
+
+    const newLives = lives - 1;
+    setLives(newLives);
+    setIsGameActive(false);
+
+    if (newLives <= 0) {
+      setMessage(`Game Over! Final Score: ${scoreRef.current}`);
+      if (!submissionRef.current) {
+        submissionRef.current = true;
+        onGameEndRef.current(scoreRef.current);
+      }
+    } else {
+      setTimeout(() => {
+        fetchQuestion();
+      }, 2000); 
+    }
+  };
+
   const fetchQuestion = async () => {
     setIsLoading(true);
     setMessage('');
-    setUserGuess(''); // Clear previous guess
+    setUserGuess(''); 
     try {
-      // Fetch directly from the API, no proxy
-      const response = await fetch(`${API_BASE_URL}&_=${new Date().getTime()}`);
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase.functions.invoke('get-question');
       
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      if (error) throw new Error(error.message);
+      if (!data || !data.image || !data.answerToken) {
+        throw new Error('Invalid data from server function');
       }
-
-      // The API response format is { question: string, solution: number }
-      const data = await response.json();
-
-      // --- SAFETY CHECK ---
-      if (!data || !data.question || data.solution === undefined) {
-        throw new Error('Invalid data received from API');
-      }
-      // --- END OF SAFETY CHECK ---
-
-      // --- FIX ---
-      // Map the API's 'data.question' to our state's 'image' property
-      // We also don't need the .replace() logic, as your old code proved.
-      const questionData: Question = {
-        image: data.question, 
-        solution: parseInt(data.solution, 10),
-      };
-      // --- END OF FIX ---
-
-      setQuestion(questionData); // Use the correctly mapped data
+      setQuestion(data); 
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch question:", error);
-      setMessage('Error loading question. Please try again.');
+      setMessage(`Error loading question: ${error.message}`);
     }
+    
+    setTimeLeft(initialTime);
     setIsLoading(false);
+    setIsGameActive(true); 
   };
 
-  // Initial fetch on component mount
   useEffect(() => {
     fetchQuestion();
-  }, []); // Empty array means run once on mount
+  }, []); 
 
-
-  // --- 2. Timer Logic (Mostly unchanged) ---
   useEffect(() => {
-    if (!isGameActive) {
+    if (!isGameActive || isLoading) return;
+    if (timeLeft === 0) {
+      handleLifeLoss('Time out!');
       return;
     }
-
     const timer = setInterval(() => {
-      setTimeLeft(prevTime => {
-        if (prevTime <= 1) {
-          clearInterval(timer);
-          if (!submissionRef.current) {
-            submissionRef.current = true;
-            onGameEndRef.current(scoreRef.current); // Submit final score
-            setMessage('Time Out! Game Over.');
-            setIsGameActive(false);
-          }
-          return 0;
-        }
-        return prevTime - 1;
-      });
+      setTimeLeft(prevTime => prevTime - 1);
     }, 1000);
-
     return () => clearInterval(timer);
-  }, [isGameActive]); // Only depends on game active state
+  }, [timeLeft, isGameActive, isLoading]); 
 
+  const handleGuessSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); 
+    if (!isGameActive || isLoading || !question) return;
+    
+    setIsLoading(true); 
+    setIsGameActive(false); 
+    
+    try {
+      const supabase = getSupabaseClient();
+      const guessAsNumber = parseInt(userGuess, 10);
+      const { data, error } = await supabase.functions.invoke('check-answer', {
+        body: { guess: guessAsNumber, answerToken: question.answerToken },
+      });
 
-  // --- 3. Guess Handling Logic ---
-  const handleGuessSubmit = (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent form from reloading page
-    if (!isGameActive || isLoading || !question) {
-      return;
-    }
+      if (error) throw new Error(error.message);
 
-    const guessAsNumber = parseInt(userGuess, 10);
+      if (data.correct) {
+        // --- CORRECT GUESS ---
+        const newComboCount = comboCount + 1;
+        setComboCount(newComboCount);
 
-    if (guessAsNumber === question.solution) {
-      // Correct Guess
-      setScore(prevScore => prevScore + 10); // Add 10 points
-      setMessage('Correct! +10 points');
-      
-      // Fetch next question after a short delay
-      setTimeout(() => {
-        fetchQuestion();
-      }, 1000);
+        let pointsToAdd = 10; 
+        
+        // Check for COMBO
+        if (newComboCount > 0 && newComboCount % 3 === 0) {
+          const comboNum = newComboCount / 3;
+          pointsToAdd += 10; 
+          // ADD ID TO NOTIFICATION
+          setNotification({ id: new Date().getTime(), type: 'combo', message: `COMBO x${comboNum}!` });
+        } else {
+          // ADD ID TO NOTIFICATION
+          setNotification({ id: new Date().getTime(), type: 'correct', message: `+${pointsToAdd}` });
+        }
 
-    } else {
-      // Incorrect Guess
-      setMessage('Wrong! Try again.');
-      // Clear the "Wrong" message after a moment
-      setTimeout(() => {
-        setMessage('');
-      }, 1200);
+        setScore(prevScore => {
+          const newScore = prevScore + pointsToAdd;
+          const newLevel = Math.floor(newScore / POINTS_PER_LEVEL) + 1;
+          
+          if (newLevel > level) {
+            setLevel(newLevel);
+            setShowLevelUp(true); 
+          }
+          return newScore;
+        });
+
+        setTimeout(() => {
+          fetchQuestion();
+        }, 1200); 
+
+      } else {
+        // --- WRONG GUESS ---
+        handleLifeLoss('Wrong!'); 
+      }
+    } catch (error: any) {
+      console.error("Failed to check answer:", error);
+      setMessage(`Error checking answer: ${error.message}`);
+      setTimeout(() => fetchQuestion(), 1500);
     }
   };
   
-  // Note: There is no "win" condition like matching all cards.
-  // The game only ends when the timer runs out.
-
-  
-  // --- Render Helpers ---
   const getTimerColor = () => {
     if (timeLeft <= 5) return 'bg-red-500';
     if (timeLeft <= 10) return 'bg-yellow-500';
@@ -162,7 +187,27 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-8 flex flex-col items-center">
       
-      {/* Header and Status (Kept from original) */}
+      {/* --- RENDER ANIMATIONS --- */}
+      {notification && (
+        // --- USE THE STABLE ID AS THE KEY ---
+        <GameNotification
+          key={notification.id} 
+          type={notification.type}
+          message={notification.message}
+          onComplete={() => setNotification(null)}
+        />
+      )}
+      
+      {showLevelUp && (
+        <LevelUpAnimation
+          level={level}
+          onComplete={() => setShowLevelUp(false)}
+        />
+      )}
+      {/* ------------------------- */}
+
+      
+      {/* Header and Status */}
       <div className="w-full max-w-4xl bg-white p-4 rounded-xl shadow-lg mb-6">
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div className="text-gray-700">
@@ -175,13 +220,20 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
             </p>
           </div>
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
              <div className="text-center">
                 <p className="text-lg font-bold text-gray-800">{score}</p>
                 <p className="text-xs text-gray-500">Score</p>
              </div>
              
-             {/* We don't have "Matches" anymore, so that is removed */}
+             <div className="text-center">
+                <div className="flex justify-center items-center gap-1 h-6">
+                    <Heart className={`w-6 h-6 ${lives >= 1 ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} />
+                    <Heart className={`w-6 h-6 ${lives >= 2 ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} />
+                    <Heart className={`w-6 h-6 ${lives >= 3 ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} />
+                </div>
+                <p className="text-xs text-gray-500">Lives</p>
+             </div>
           </div>
           
           {/* Timer */}
@@ -192,24 +244,23 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
         </div>
       </div>
       
-      {/* Message Area */}
+      {/* Message Area (Only shows Game Over message now) */}
       {message && (
-        <div className={`w-full max-w-4xl p-3 text-center rounded-lg mb-6 text-white font-semibold shadow-md ${message.includes('Correct!') ? 'bg-green-600' : message.includes('Wrong!') ? 'bg-red-500' : message.includes('Time Out') || message.includes('CONGRAGULATIONS') ? 'bg-indigo-600' : 'bg-blue-500'}`}>
+        <div className={`w-full max-w-4xl p-3 text-center rounded-lg mb-6 text-white font-semibold shadow-md bg-red-500`}>
           {message}
         </div>
       )}
 
-      {/* --- New Game Area --- */}
+      {/* Game Area */}
       <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-lg">
-        {isLoading ? (
+        {(isLoading || !isGameActive) && lives > 0 ? (
           <div className="flex flex-col items-center justify-center h-64">
             <Brain className="w-16 h-16 text-yellow-500 animate-pulse" />
             <p className="mt-4 text-gray-600">Loading new challenge...</p>
           </div>
-        ) : question ? (
+        ) : question && isGameActive ? (
           <form onSubmit={handleGuessSubmit} className="flex flex-col items-center">
             
-            {/* Image from API */}
             <div className="w-full mb-4 rounded-lg overflow-hidden shadow-md border-4 border-gray-200">
               <img 
                 src={question.image} 
@@ -220,7 +271,6 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
             
             <p className="mb-4 text-lg font-semibold text-gray-700">What is the solution?</p>
             
-            {/* Guess Input */}
             <input 
               type="number" 
               value={userGuess}
@@ -230,7 +280,6 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
               placeholder="Enter number"
             />
             
-            {/* Submit Button */}
             <button 
               type="submit" 
               disabled={!isGameActive || isLoading || !userGuess}
@@ -241,13 +290,20 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
             
           </form>
         ) : (
-          <p>Error: No question loaded.</p>
+          <div className="flex flex-col items-center justify-center h-64">
+             <Brain className="w-16 h-16 text-red-500" />
+             <p className="mt-4 text-xl font-bold text-gray-700">{message || "Error: No question loaded."}</p>
+          </div>
         )}
       </div>
       
+      {/* --- THIS IS THE FIX --- */}
+      {/* The </p> tag was missing, and it was inside the <div> */}
       <p className="mt-8 text-sm text-gray-500">
         You are playing as: <span className="font-semibold text-gray-700">{playerName}</span>
       </p>
-    </div>
+      {/* ------------------------- */}
+
+    </div> // This is the main closing div, it was correct
   );
 }

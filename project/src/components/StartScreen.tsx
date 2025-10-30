@@ -1,94 +1,78 @@
-// src/components/StartScreen.tsx (REVISED)
-
+// src/components/StartScreen.tsx
 import { useState } from 'react';
-import { Sparkles, Trophy } from 'lucide-react';
-import { DifficultyLevel } from '../lib/supabase'; // Assuming DifficultyLevel is imported here
+import { DifficultyLevel } from '../lib/supabaseClient';
+import { LogOut } from 'lucide-react'; // Removed LogIn
+
+interface DifficultyOption {
+  id: DifficultyLevel;
+  name: string;
+  time: string;
+  desc: string;
+}
+
+const difficultyOptions: DifficultyOption[] = [
+  { id: 'easy', name: 'Easy', time: '30s per puzzle', desc: 'Learn the game' },
+  { id: 'medium', name: 'Medium', time: '20s per puzzle', desc: 'Balanced challenge' },
+  { id: 'hard', name: 'Hard', time: '10s per puzzle', desc: 'Expert mode' },
+];
 
 interface StartScreenProps {
-  // onStart now only needs the difficulty
-  onStart: (difficulty: DifficultyLevel) => void; 
-  onLogout: () => void; // Add a logout function for convenience
+  onStart: (difficulty: DifficultyLevel) => void;
+  onLogout: () => void;
+  // Removed onLogin and isAuthenticated
 }
 
 export default function StartScreen({ onStart, onLogout }: StartScreenProps) {
-  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | null>(null);
-
-  const difficulties: { level: DifficultyLevel; time: number; color: string; description: string }[] = [
-    { level: 'easy', time: 30, color: 'bg-green-500 hover:bg-green-600', description: 'Learn the game' },
-    { level: 'medium', time: 20, color: 'bg-yellow-500 hover:bg-yellow-600', description: 'Balanced challenge' },
-    { level: 'hard', time: 10, color: 'bg-red-500 hover:bg-red-600', description: 'Expert mode' },
-  ];
-
-  const handleStart = () => {
-    if (selectedDifficulty) {
-      onStart(selectedDifficulty);
-    }
-  };
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel>('easy');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-400 via-orange-400 to-yellow-500 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 transform hover:scale-[1.01] transition-transform duration-300 relative">
-            
-            {/* Logout Button */}
-            <button 
-                onClick={onLogout}
-                className="absolute top-4 right-4 text-sm text-gray-500 hover:text-red-500 transition font-medium"
-            >
-                Log Out
-            </button>
-            
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-3 mb-4 animate-bounce">
-              <Sparkles className="w-10 h-10 text-yellow-500" />
-              <h1 className="text-5xl md:text-6xl font-bold text-gray-800">
-                Banana Brain
-              </h1>
-              <Sparkles className="w-10 h-10 text-yellow-500" />
-            </div>
-            <p className="text-xl text-gray-600 font-medium">Challenge Your Mind!</p>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center p-4">
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 text-center">
+        
+        {/* --- REVERTED TO ONLY LOGOUT BUTTON --- */}
+        <button
+          onClick={onLogout}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-sm font-medium flex items-center gap-1"
+        >
+          Log Out <LogOut className="w-4 h-4" />
+        </button>
+        {/* -------------------------------------- */}
 
-          <div className="space-y-6">
-            {/* Player Name Input Block REMOVED */}
+        <h1 className="text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
+          <span role="img" aria-label="banana">🍌</span>
+          Banana Brain
+          <span role="img" aria-label="brain">🧠</span>
+        </h1>
+        <p className="text-lg text-gray-600 mb-8">Challenge Your Mind!</p>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Choose Difficulty
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {difficulties.map(({ level, time, color, description }) => (
-                  <button
-                    key={level}
-                    onClick={() => setSelectedDifficulty(level)}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                      selectedDifficulty === level
-                        ? `${color} text-white border-transparent scale-105 shadow-lg`
-                        : 'bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    <div className="text-lg font-bold capitalize mb-1">{level}</div>
-                    <div className="text-sm opacity-90">{time}s per puzzle</div>
-                    <div className="text-xs mt-1 opacity-75">{description}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button
-              onClick={handleStart}
-              disabled={!selectedDifficulty}
-              className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-4 rounded-xl font-bold text-xl hover:from-yellow-600 hover:to-orange-600 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transform hover:scale-105 disabled:hover:scale-100 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-            >
-              <Trophy className="w-6 h-6" />
-              Start Challenge
-            </button>
-          </div>
-
-          <div className="mt-8 text-center text-sm text-gray-500">
-            <p>Solve banana puzzles and climb the leaderboard!</p>
+        <div className="space-y-4 mb-8">
+          <p className="font-semibold text-gray-700">Choose Difficulty</p>
+          <div className="grid grid-cols-3 gap-3">
+            {difficultyOptions.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => setSelectedDifficulty(opt.id)}
+                className={`p-4 rounded-lg border-2 transition ${
+                  selectedDifficulty === opt.id
+                    ? 'border-yellow-500 bg-yellow-50'
+                    : 'border-gray-200 bg-white hover:bg-gray-50'
+                }`}
+              >
+                <span className="block font-bold text-gray-800">{opt.name}</span>
+                <span className="block text-sm text-gray-600">{opt.time}</span>
+                <span className="block text-xs text-gray-500 mt-1">{opt.desc}</span>
+              </button>
+            ))}
           </div>
         </div>
+
+        <button
+          onClick={() => onStart(selectedDifficulty)}
+          className="w-full bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg shadow-md text-xl hover:bg-yellow-600 transition"
+        >
+          Start Challenge
+        </button>
+        <p className="text-xs text-gray-500 mt-4">Solve banana puzzles and climb the leaderboard!</p>
       </div>
     </div>
   );

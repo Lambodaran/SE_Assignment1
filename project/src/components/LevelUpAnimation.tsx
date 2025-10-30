@@ -1,3 +1,4 @@
+// src/components/LevelUpAnimation.tsx
 import { useEffect } from 'react';
 import { Trophy, Star } from 'lucide-react';
 
@@ -8,9 +9,10 @@ interface LevelUpAnimationProps {
 
 export default function LevelUpAnimation({ level, onComplete }: LevelUpAnimationProps) {
   useEffect(() => {
+    // --- FIX: Changed from 2500 to 1000 ---
     const timer = setTimeout(() => {
       onComplete();
-    }, 2500);
+    }, 1000); // 1 second
 
     return () => clearTimeout(timer);
   }, [onComplete]);
