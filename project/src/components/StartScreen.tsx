@@ -27,27 +27,29 @@ export default function StartScreen({ onStart, onLogout }: StartScreenProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 text-center">
+      {/* --- RESPONSIVE CHANGE: p-8 changed to p-6 sm:p-8 --- */}
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center">
         
-        {/* --- REVERTED TO ONLY LOGOUT BUTTON --- */}
         <button
           onClick={onLogout}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-sm font-medium flex items-center gap-1"
         >
           Log Out <LogOut className="w-4 h-4" />
         </button>
-        {/* -------------------------------------- */}
 
-        <h1 className="text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
+        {/* --- RESPONSIVE CHANGE: text-4xl changed to text-3xl sm:text-4xl --- */}
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
           <span role="img" aria-label="banana">🍌</span>
           Banana Brain
           <span role="img" aria-label="brain">🧠</span>
         </h1>
-        <p className="text-lg text-gray-600 mb-8">Challenge Your Mind!</p>
+        {/* --- RESPONSIVE CHANGE: text-lg changed to text-base sm:text-lg --- */}
+        <p className="text-base sm:text-lg text-gray-600 mb-8">Challenge Your Mind!</p>
 
         <div className="space-y-4 mb-8">
           <p className="font-semibold text-gray-700">Choose Difficulty</p>
-          <div className="grid grid-cols-3 gap-3">
+          {/* --- RESPONSIVE CHANGE: grid-cols-3 changed to grid-cols-1 sm:grid-cols-3 --- */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {difficultyOptions.map((opt) => (
               <button
                 key={opt.id}
@@ -68,7 +70,8 @@ export default function StartScreen({ onStart, onLogout }: StartScreenProps) {
 
         <button
           onClick={() => onStart(selectedDifficulty)}
-          className="w-full bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg shadow-md text-xl hover:bg-yellow-600 transition"
+          // --- RESPONSIVE CHANGE: text-xl changed to text-lg sm:text-xl ---
+          className="w-full bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg shadow-md text-lg sm:text-xl hover:bg-yellow-600 transition"
         >
           Start Challenge
         </button>
