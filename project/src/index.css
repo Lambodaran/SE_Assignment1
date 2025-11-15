@@ -3,40 +3,29 @@
 @tailwind utilities;
 
 @layer utilities {
-  /* --- Animations for GameNotification.tsx --- */
+
+  /* --- Animations for GameNotification (Combo/Correct) --- */
   .animate-popInFadeOut {
-    animation: popInFadeOut 1.2s ease-in-out;
+    /* 'forwards' makes it stay invisible at the end */
+    animation: popInFadeOut 1.2s ease-in-out forwards;
   }
   
   @keyframes popInFadeOut {
-    0% {
-      opacity: 0;
-      transform: scale(0.5);
-    }
-    30% {
-      opacity: 1;
-      transform: scale(1.1);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    80% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(0.5);
-    }
+    0% { opacity: 0; transform: scale(0.5); }
+    30% { opacity: 1; transform: scale(1.1); }
+    50% { opacity: 1; transform: scale(1); }
+    80% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.5); }
   }
 
   /* --- Animations for Modals (LevelUp, Top3) --- */
   .animate-fadeIn {
+    /* 'forwards' makes the modal stay visible */
     animation: fadeIn 0.3s ease-out forwards;
   }
   
   .animate-scaleIn {
+    /* 'forwards' makes the modal stay visible */
     animation: scaleIn 0.3s ease-out forwards;
   }
 
@@ -50,26 +39,20 @@
     to { transform: scale(1); }
   }
 
-  /* --- Animations for StartScreen.tsx --- */
+  /* --- Animations for StartScreen --- */
 
-  /* 1. Page Load: Card Fade-in (SLOWER) */
+  /* 1. Card Fade-in */
   .animate-fade-in-up {
-    animation: fadeInUp 0.8s ease-out forwards; /* Was 0.5s */
-    opacity: 0; /* Start hidden */
+    animation: fadeInUp 0.8s ease-out forwards; 
+    opacity: 0;
   }
 
   @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
-  /* 2. Page Load: Background Shimmer */
+  /* 2. Background Shimmer */
   .animate-gradient-shimmer {
     animation: gradientShimmer 10s ease infinite;
     background-size: 200% 200%;
@@ -81,54 +64,37 @@
     100% { background-position: 0% 50%; }
   }
 
-  /* 3. Logo Animation: Pop-in (SLOWER) */
+  /* 3. Logo Pop-in */
   .animate-pop-in {
-    animation: popIn 0.8s ease-out forwards; /* Was 0.5s */
+    animation: popIn 0.8s ease-out forwards;
     opacity: 0; 
     transform: scale(0.5);
   }
 
   @keyframes popIn {
-    from {
-      opacity: 0;
-      transform: scale(0.5);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
   }
 
-  /* 4. Heading "Bounce-in" Animation (SLOWER) */
+  /* 4. Heading "Bounce-in" */
   .animate-bounce-in {
-    animation: bounceIn 0.8s ease-out forwards; /* Was 0.6s */
+    animation: bounceIn 0.8s ease-out forwards;
     opacity: 0;
   }
 
   @keyframes bounceIn {
-    0% {
-      opacity: 0;
-      transform: scale(0.3) translateY(-30px);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1.1) translateY(0);
-    }
-    70% {
-      transform: scale(0.9);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
+    0% { opacity: 0; transform: scale(0.3) translateY(-30px); }
+    50% { opacity: 1; transform: scale(1.1) translateY(0); }
+    70% { transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
   }
 
-  /* 5. Emoji Pulse Animation */
+  /* 5. Emoji Pulse */
   .animate-slow-pulse {
     animation: pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  /* 6. Animation delay utilities */
+  /* 6. Animation Delays */
   .animation-delay-100 { animation-delay: 100ms; }
   .animation-delay-200 { animation-delay: 200ms; }
   .animation-delay-300 { animation-delay: 300ms; }
