@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 @layer utilities {
-  /* --- Animations for GameNotification.tsx (Already in your file) --- */
+  /* --- Animations for GameNotification.tsx --- */
   .animate-popInFadeOut {
-    animation: popInFadeOut 1.2s ease-in-out; /* Removed 'forwards' to fix bug */
+    animation: popInFadeOut 1.2s ease-in-out;
   }
   
   @keyframes popInFadeOut {
@@ -50,11 +50,11 @@
     to { transform: scale(1); }
   }
 
-  /* --- NEW Animations for StartScreen.tsx --- */
+  /* --- Animations for StartScreen.tsx --- */
 
-  /* 1. Page Load: Card Fade-in */
+  /* 1. Page Load: Card Fade-in (SLOWER) */
   .animate-fade-in-up {
-    animation: fadeInUp 0.5s ease-out forwards;
+    animation: fadeInUp 0.8s ease-out forwards; /* Was 0.5s */
     opacity: 0; /* Start hidden */
   }
 
@@ -81,11 +81,11 @@
     100% { background-position: 0% 50%; }
   }
 
-  /* 3. Logo Animation: Pop-in */
+  /* 3. Logo Animation: Pop-in (SLOWER) */
   .animate-pop-in {
-    animation: popIn 0.5s ease-out forwards;
-    opacity: 0; /* Start hidden */
-    transform: scale(0.5); /* Start small */
+    animation: popIn 0.8s ease-out forwards; /* Was 0.5s */
+    opacity: 0; 
+    transform: scale(0.5);
   }
 
   @keyframes popIn {
@@ -99,7 +99,36 @@
     }
   }
 
-  /* 4. Animation delay utilities */
+  /* 4. Heading "Bounce-in" Animation (SLOWER) */
+  .animate-bounce-in {
+    animation: bounceIn 0.8s ease-out forwards; /* Was 0.6s */
+    opacity: 0;
+  }
+
+  @keyframes bounceIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.3) translateY(-30px);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.1) translateY(0);
+    }
+    70% {
+      transform: scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* 5. Emoji Pulse Animation */
+  .animate-slow-pulse {
+    animation: pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* 6. Animation delay utilities */
   .animation-delay-100 { animation-delay: 100ms; }
   .animation-delay-200 { animation-delay: 200ms; }
   .animation-delay-300 { animation-delay: 300ms; }

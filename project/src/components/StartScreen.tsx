@@ -27,37 +27,37 @@ export default function StartScreen({ onStart, onLogout }: StartScreenProps) {
   return (
     <div 
       className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center p-4 
-                 animate-gradient-shimmer" /* 1. Background gradient shimmer */
+                 animate-gradient-shimmer"
     >
       <div 
         className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center
-                   animate-fade-in-up" /* 2. Page load card fade-in */
+                   animate-fade-in-up"
       >
         
         <button
           onClick={onLogout}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-sm font-medium flex items-center gap-1
-                     transition-transform duration-200 hover:rotate-12" /* 3. Logout icon animation */
+                     transition-transform duration-200 hover:rotate-12"
         >
           Log Out <LogOut className="w-4 h-4" />
         </button>
 
+        {/* --- HEADING ANIMATION UPDATED --- */}
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
-          {/* 4. Staggered logo animation */}
           <span 
             role="img" 
             aria-label="banana" 
-            className="inline-block animate-pop-in animation-delay-100"
+            className="inline-block animate-bounce-in animation-delay-100 animate-slow-pulse"
           >
             🍌
           </span>
-          <span className="inline-block animate-pop-in animation-delay-200">
+          <span className="inline-block animate-bounce-in animation-delay-200">
             Banana Brain
           </span>
           <span 
             role="img" 
             aria-label="brain" 
-            className="inline-block animate-pop-in animation-delay-300"
+            className="inline-block animate-bounce-in animation-delay-300 animate-slow-pulse"
           >
             🧠
           </span>
@@ -75,7 +75,7 @@ export default function StartScreen({ onStart, onLogout }: StartScreenProps) {
                 key={opt.id}
                 onClick={() => setSelectedDifficulty(opt.id)}
                 className={`p-4 rounded-lg border-2 
-                           transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md /* 5. Difficulty card hover */
+                           transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md
                            ${
                   selectedDifficulty === opt.id
                     ? 'border-yellow-500 bg-yellow-50'
@@ -90,10 +90,13 @@ export default function StartScreen({ onStart, onLogout }: StartScreenProps) {
           </div>
         </div>
 
+        {/* --- START BUTTON HOVER EFFECT UPDATED --- */}
         <button
           onClick={() => onStart(selectedDifficulty)}
           className="w-full bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg shadow-md text-lg sm:text-xl 
-                     transition-transform duration-200 ease-in-out hover:scale-105 active:scale-95 /* 6. Start button spring effect */
+                     transition-all duration-300 ease-in-out 
+                     hover:scale-105 hover:-translate-y-1 hover:shadow-lg 
+                     active:scale-95 active:shadow-inner
                      animate-fade-in-up animation-delay-500"
         >
           Start Challenge
