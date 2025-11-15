@@ -1,7 +1,7 @@
 // src/components/StartScreen.tsx
 import { useState } from 'react';
 import { DifficultyLevel } from '../lib/supabaseClient';
-import { LogOut } from 'lucide-react'; // Removed LogIn
+import { LogOut } from 'lucide-react';
 
 interface DifficultyOption {
   id: DifficultyLevel;
@@ -19,42 +19,64 @@ const difficultyOptions: DifficultyOption[] = [
 interface StartScreenProps {
   onStart: (difficulty: DifficultyLevel) => void;
   onLogout: () => void;
-  // Removed onLogin and isAuthenticated
 }
 
 export default function StartScreen({ onStart, onLogout }: StartScreenProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel>('easy');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center p-4">
-      {/* --- RESPONSIVE CHANGE: p-8 changed to p-6 sm:p-8 --- */}
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center p-4 
+                 animate-gradient-shimmer" /* 1. Background gradient shimmer */
+    >
+      <div 
+        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center
+                   animate-fade-in-up" /* 2. Page load card fade-in */
+      >
         
         <button
           onClick={onLogout}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-sm font-medium flex items-center gap-1"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-sm font-medium flex items-center gap-1
+                     transition-transform duration-200 hover:rotate-12" /* 3. Logout icon animation */
         >
           Log Out <LogOut className="w-4 h-4" />
         </button>
 
-        {/* --- RESPONSIVE CHANGE: text-4xl changed to text-3xl sm:text-4xl --- */}
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
-          <span role="img" aria-label="banana">🍌</span>
-          Banana Brain
-          <span role="img" aria-label="brain">🧠</span>
+          {/* 4. Staggered logo animation */}
+          <span 
+            role="img" 
+            aria-label="banana" 
+            className="inline-block animate-pop-in animation-delay-100"
+          >
+            🍌
+          </span>
+          <span className="inline-block animate-pop-in animation-delay-200">
+            Banana Brain
+          </span>
+          <span 
+            role="img" 
+            aria-label="brain" 
+            className="inline-block animate-pop-in animation-delay-300"
+          >
+            🧠
+          </span>
         </h1>
-        {/* --- RESPONSIVE CHANGE: text-lg changed to text-base sm:text-lg --- */}
-        <p className="text-base sm:text-lg text-gray-600 mb-8">Challenge Your Mind!</p>
+        
+        <p className="text-base sm:text-lg text-gray-600 mb-8 animate-fade-in-up animation-delay-400">
+          Challenge Your Mind!
+        </p>
 
-        <div className="space-y-4 mb-8">
+        <div className="space-y-4 mb-8 animate-fade-in-up animation-delay-400">
           <p className="font-semibold text-gray-700">Choose Difficulty</p>
-          {/* --- RESPONSIVE CHANGE: grid-cols-3 changed to grid-cols-1 sm:grid-cols-3 --- */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {difficultyOptions.map((opt) => (
               <button
                 key={opt.id}
                 onClick={() => setSelectedDifficulty(opt.id)}
-                className={`p-4 rounded-lg border-2 transition ${
+                className={`p-4 rounded-lg border-2 
+                           transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md /* 5. Difficulty card hover */
+                           ${
                   selectedDifficulty === opt.id
                     ? 'border-yellow-500 bg-yellow-50'
                     : 'border-gray-200 bg-white hover:bg-gray-50'
@@ -70,12 +92,15 @@ export default function StartScreen({ onStart, onLogout }: StartScreenProps) {
 
         <button
           onClick={() => onStart(selectedDifficulty)}
-          // --- RESPONSIVE CHANGE: text-xl changed to text-lg sm:text-xl ---
-          className="w-full bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg shadow-md text-lg sm:text-xl hover:bg-yellow-600 transition"
+          className="w-full bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg shadow-md text-lg sm:text-xl 
+                     transition-transform duration-200 ease-in-out hover:scale-105 active:scale-95 /* 6. Start button spring effect */
+                     animate-fade-in-up animation-delay-500"
         >
           Start Challenge
         </button>
-        <p className="text-xs text-gray-500 mt-4">Solve banana puzzles and climb the leaderboard!</p>
+        <p className="text-xs text-gray-500 mt-4 animate-fade-in-up animation-delay-500">
+          Solve banana puzzles and climb the leaderboard!
+        </p>
       </div>
     </div>
   );
