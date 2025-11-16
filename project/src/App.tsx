@@ -4,6 +4,7 @@ import { Session, SupabaseClient, AuthUser } from '@supabase/supabase-js';
 import { getSupabaseClient, DifficultyLevel } from './lib/supabaseClient'; 
 
 // Component Imports
+import LandingPage from './components/LandingPage'; // <-- ADDED
 import StartScreen from './components/StartScreen';
 import GameScreen from './components/GameScreen';
 import LeaderboardScreen from './components/LeaderboardScreen';
@@ -14,7 +15,8 @@ import MfaEnrollPage from './components/MfaEnrollPage';
 import { submitScore } from './services/leaderboardService';
 
 // --- TYPE DEFINITIONS ---
-type AppState = 'auth' | 'enroll-mfa' | 'verify-mfa' | 'start' | 'playing' | 'leaderboard' | 'update-password'; 
+// Added 'landing' state
+type AppState = 'landing' | 'auth' | 'enroll-mfa' | 'verify-mfa' | 'start' | 'playing' | 'leaderboard' | 'update-password'; 
 
 interface GameConfig {
   userId: string; 
@@ -26,7 +28,8 @@ interface GameConfig {
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
-  const [appState, setAppState] = useState<AppState>('auth');
+  // Set 'landing' as the initial state
+  const [appState, setAppState] = useState<AppState>('landing');
   const [loading, setLoading] = useState(true);
 
   const [gameConfig, setGameConfig] = useState<GameConfig>({
@@ -36,7 +39,7 @@ function App() {
   });
 
   // --- NEW: MFA CHECK LOGIC ---
-  // This function checks the user's login status and decides where to send them.
+  // (This function is unchanged from your version)
   const checkMfaStatus = async (client: SupabaseClient, user: AuthUser) => {
     setLoading(true);
     
@@ -98,8 +101,7 @@ function App() {
         // Session exists. Check their MFA status.
         checkMfaStatus(client, session.user);
       } else {
-        // No session, go to login
-        setAppState('auth'); 
+        // No session, just stop loading. State is already 'landing'.
         setLoading(false);
       }
     });
@@ -112,8 +114,8 @@ function App() {
           // User just logged in. Check their MFA status.
           checkMfaStatus(client, session.user);
         } else {
-          // User just logged out. Go to auth.
-          setAppState('auth');
+          // User just logged out. Go to landing.
+          setAppState('landing');
           setLoading(false);
         }
       }
@@ -133,6 +135,11 @@ function App() {
   // Called by UpdatePasswordPage on success
   const handlePasswordUpdateSuccess = () => {
     window.history.pushState({}, '', '/'); 
+    setAppState('auth');
+  };
+
+  // --- ADDED: Handler for the landing page button ---
+  const handleLoginClick = () => {
     setAppState('auth');
   };
 
@@ -203,6 +210,11 @@ function App() {
 
   return (
     <>
+      {/* --- ADDED: Render the LandingPage --- */}
+      {appState === 'landing' && (
+        <LandingPage onLoginClick={handleLoginClick} />
+      )}
+      
       {/* State 0: Update Password */}
       {appState === 'update-password' && (
         <UpdatePasswordPage onSuccess={handlePasswordUpdateSuccess} />

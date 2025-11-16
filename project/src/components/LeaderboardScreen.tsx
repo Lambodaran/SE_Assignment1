@@ -13,147 +13,217 @@ interface LeaderboardScreenProps {
   onMainMenu: () => void;
 }
 
-export default function LeaderboardScreen({ 
-  playerName, 
-  finalScore, 
-  difficulty, 
-  onPlayAgain, 
-  onMainMenu 
+export default function LeaderboardScreen({
+  playerName,
+  finalScore,
+  difficulty,
+  onPlayAgain,
+  onMainMenu,
 }: LeaderboardScreenProps) {
   
+  const [selectedTab, setSelectedTab] = useState<DifficultyLevel>(difficulty);
   const [scores, setScores] = useState<Score[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [showTop3, setShowTop3] = useState(false);
   const [animationPlayed, setAnimationPlayed] = useState(false);
 
+  // Fetch Leaderboard for selected difficulty
   useEffect(() => {
     const fetchLeaderboard = async () => {
       setLoading(true);
       setError(null);
-      const supabase = getSupabaseClient();
 
+      const supabase = getSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('leaderboard')
           .select('*')
-          .eq('difficulty', difficulty)
+          .eq('difficulty', selectedTab)
           .order('score', { ascending: false })
           .order('created_at', { ascending: true })
           .limit(10);
 
         if (error) throw error;
 
-        if (data) {
-          setScores(data);
+        setScores(data || []);
 
-          if (!animationPlayed) {
-            const top3 = data.slice(0, 3);
-            const isTop3 = top3.some(entry => 
-              entry.player_name === playerName && entry.score === finalScore
-            );
-            const thirdPlaceScore = top3.length === 3 ? top3[2].score : 0;
-            
-            if ((isTop3 || finalScore >= thirdPlaceScore) && finalScore > 0) {
-              setShowTop3(true); 
-              setAnimationPlayed(true); 
-            }
+        // Check Top3 animation
+        if (!animationPlayed && selectedTab === difficulty && data) {
+          const top3 = data.slice(0, 3);
+          const isTop3 = top3.some(
+            (entry) =>
+              entry.player_name === playerName &&
+              entry.score === finalScore
+          );
+          const third = top3.length === 3 ? top3[2].score : 0;
+
+          if ((isTop3 || finalScore >= third) && finalScore > 0) {
+            setShowTop3(true);
+            setAnimationPlayed(true);
           }
         }
+
       } catch (err: any) {
-        console.error("Error fetching leaderboard:", err);
+        console.error(err);
         setError("Failed to fetch leaderboard. Please check your connection.");
       }
+
       setLoading(false);
     };
 
     fetchLeaderboard();
-  }, [difficulty, playerName, finalScore, animationPlayed]);
+  }, [selectedTab, animationPlayed, difficulty, playerName, finalScore]);
+
+
+  // Difficulty Tab Button
+  const TabButton = (label: DifficultyLevel) => (
+    <button
+      key={label}
+      onClick={() => setSelectedTab(label)}
+      className={`flex-1 py-3 text-center font-bold rounded-xl transition-all duration-300
+        ${
+          selectedTab === label
+            ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-md scale-105"
+            : "bg-white/40 text-gray-700 hover:bg-white/70"
+        }
+      `}
+    >
+      {label.charAt(0).toUpperCase() + label.slice(1)}
+    </button>
+  );
+
 
   return (
     <>
-      {showTop3 && (
-        <Top3Animation onComplete={() => setShowTop3(false)} />
-      )}
+      {showTop3 && <Top3Animation onComplete={() => setShowTop3(false)} />}
 
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-4 sm:p-8">
-          
-           {/* Header */}
+      {/* CLEAN YELLOW THEME BACKGROUND */}
+      <div 
+        className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 
+                   flex items-center justify-center p-4"
+      >
+
+        {/* Main Container */}
+        <div className="w-full max-w-3xl bg-white/95 backdrop-blur-md 
+                        rounded-2xl shadow-2xl p-6 relative border border-white/20">
+
+          {/* Header */}
           <div className="text-center mb-6">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 flex items-center justify-center gap-3">
-              <Trophy className="w-8 h-8 sm:w-10 h-10 text-yellow-500" />
+            <Trophy className="w-14 h-14 text-yellow-500 drop-shadow-xl mx-auto" />
+            <h1 className="text-4xl sm:text-5xl font-black 
+                           bg-gradient-to-r from-yellow-500 via-orange-500 to-pink-500 
+                           bg-clip-text text-transparent">
               Leaderboard
             </h1>
-            <p className="text-base sm:text-lg text-gray-600 mt-2 capitalize">
-              Top 10 Players - <span className="font-semibold">{difficulty}</span>
-            </p>
           </div>
 
-          {/* Player's Final Score */}
-          {/* --- FIX: Applied flex and truncate to handle long player names --- */}
-          <div className="bg-yellow-100 border-2 border-yellow-300 p-4 rounded-lg text-center mb-8 shadow-md overflow-hidden">
-            <div className="text-lg sm:text-xl font-medium text-yellow-800 flex items-center justify-center min-w-0">
-              <span className="flex-shrink-0">Your Score,&nbsp;</span>
-              <span className="truncate font-semibold">{playerName}</span>
-              <span>:</span>
+          {/* Player Score */}
+          <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-500 
+                          p-1 rounded-2xl mb-6 shadow-2xl">
+            <div className="bg-white rounded-xl p-6">
+              <div className="text-lg sm:text-xl text-gray-700 font-medium mb-2">
+                Your Score, <span className="font-bold">{playerName}</span>:
+              </div>
+              <p className="text-5xl sm:text-6xl font-black 
+                            bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 
+                            bg-clip-text text-transparent">
+                {finalScore}
+              </p>
             </div>
-            <p className="text-4xl sm:text-5xl font-bold text-yellow-900">{finalScore}</p>
+          </div>
+
+          {/* Difficulty Tabs */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            {TabButton("easy")}
+            {TabButton("medium")}
+            {TabButton("hard")}
           </div>
 
           {/* Leaderboard Table */}
-          <div className="space-y-3">
+          <div className="space-y-3 bg-gray-50 rounded-xl p-4 shadow-inner">
+
             {loading && (
-              <div className="flex justify-center items-center h-40">
-                <BarChart className="w-12 h-12 text-gray-400 animate-pulse" />
+              <div className="flex justify-center h-40 items-center">
+                <BarChart className="w-12 h-12 text-yellow-500 animate-pulse" />
               </div>
             )}
+
             {error && (
-              <div className="flex justify-center items-center h-40 p-4 bg-red-100 text-red-700 rounded-lg">
+              <div className="flex justify-center h-40 items-center p-4 
+                              bg-red-500 text-white rounded-xl shadow-lg">
                 <X className="w-8 h-8 mr-2" />
-                <p>{error}</p>
+                <p className="font-semibold">{error}</p>
               </div>
             )}
+
             {!loading && !error && (
               <ol className="divide-y divide-gray-200">
                 {scores.map((score, index) => (
-                  <li 
-                    key={score.id} 
-                    className={`flex items-center justify-between p-2 sm:p-3 rounded-md ${score.player_name === playerName && score.score === finalScore ? 'bg-yellow-50' : ''}`}
+                  <li
+                    key={score.id}
+                    className={`flex items-center justify-between p-3 rounded-lg duration-300
+                      ${
+                        score.player_name === playerName &&
+                        score.score === finalScore &&
+                        selectedTab === difficulty
+                          ? "bg-yellow-100 border-2 border-yellow-400 shadow-lg scale-[102%]"
+                          : index < 3
+                          ? "bg-white shadow-sm"
+                          : "bg-white/70"
+                      }
+                    `}
                   >
-                    {/* --- FIX: Added min-w-0 to allow this container to shrink --- */}
-                    <div className="flex items-center min-w-0">
-                      <span className={`text-base sm:text-lg font-bold w-8 flex-shrink-0 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-500' : index === 2 ? 'text-yellow-700' : 'text-gray-400'}`}>
-                        {index + 1}
+                    <div className="flex items-center min-w-0 gap-3">
+                      <span className="text-2xl w-10 text-center">
+                        {index === 0 ? "🥇" 
+                        : index === 1 ? "🥈" 
+                        : index === 2 ? "🥉" 
+                        : index + 1}
                       </span>
-                      {/* --- FIX: Added truncate to the player name --- */}
-                      <span className="text-base sm:text-lg font-medium text-gray-800 ml-3 truncate">{score.player_name}</span>
+
+                      <span className="truncate font-semibold text-gray-800">
+                        {score.player_name}
+                      </span>
                     </div>
-                    {/* --- FIX: Added ml-4 and flex-shrink-0 to protect the score --- */}
-                    <span className="text-lg sm:text-xl font-bold text-gray-900 ml-4 flex-shrink-0">{score.score}</span>
+
+                    <span className="text-2xl font-black text-gray-700">
+                      {score.score}
+                    </span>
                   </li>
                 ))}
               </ol>
             )}
+
             {!loading && !error && scores.length === 0 && (
-              <p className="text-center text-gray-500 py-6">No scores yet. Be the first!</p>
+              <div className="text-center py-10">
+                <Trophy className="w-16 h-16 text-gray-300 mx-auto" />
+                <p className="text-gray-500 text-lg font-medium mt-4">
+                  No scores yet for this level.
+                </p>
+              </div>
             )}
           </div>
 
-          {/* Action Buttons */}
+          {/* Buttons */}
           <div className="mt-10 flex flex-col sm:flex-row gap-4">
             <button
               onClick={onPlayAgain}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transition text-base"
+              className="flex-1 px-6 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 
+                         text-white font-bold rounded-xl shadow-lg 
+                         hover:scale-105 transition-all"
             >
-              <Play className="w-5 h-5" />
+              <Play className="inline-block w-5 h-5 mr-2" />
               Play Again
             </button>
+
             <button
               onClick={onMainMenu}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition text-base"
+              className="flex-1 px-6 py-4 bg-gray-900 text-white font-bold 
+                         rounded-xl shadow-lg hover:scale-105 transition-all"
             >
-              <Home className="w-5 h-5" />
+              <Home className="inline-block w-5 h-5 mr-2" />
               Main Menu
             </button>
           </div>

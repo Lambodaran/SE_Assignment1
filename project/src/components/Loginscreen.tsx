@@ -87,9 +87,23 @@ export default function LoginScreen({}: LoginScreenProps) { // <-- FIX: No props
 
         return (
           <>
-            <h2 className="text-3xl font-bold text-center text-gray-800">{title}</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-2 flex items-center justify-center gap-2 animate-bounce-in">
+              {isSignUp ? (
+                <>
+                  <span role="img" aria-label="sparkles" className="inline-block animate-slow-pulse">✨</span>
+                  <span>{title}</span>
+                  <span role="img" aria-label="rocket" className="inline-block animate-slow-pulse">🚀</span>
+                </>
+              ) : (
+                <>
+                  <span role="img" aria-label="banana" className="inline-block animate-slow-pulse">🍌</span>
+                  <span>{title}</span>
+                  <span role="img" aria-label="wave" className="inline-block animate-slow-pulse">👋</span>
+                </>
+              )}
+            </h2>
             {message && (
-                <p className={`p-3 rounded-lg ${message.includes('Error') || message.includes('match') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                <p className={`p-3 rounded-lg animate-fade-in-up ${message.includes('Error') || message.includes('match') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                     {message}
                 </p>
             )}
@@ -120,7 +134,11 @@ export default function LoginScreen({}: LoginScreenProps) { // <-- FIX: No props
                     </div>
                 )}
                 <button type="submit" disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg font-semibold hover:bg-yellow-600 disabled:bg-gray-400 transition">
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white bg-yellow-500 rounded-lg font-bold text-lg shadow-md
+                               transition-all duration-300 ease-in-out 
+                               hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:bg-yellow-600
+                               active:scale-95 active:shadow-inner
+                               disabled:bg-gray-400 disabled:hover:scale-100 disabled:hover:translate-y-0">
                     {loading ? 'Processing...' : (
                         <>
                             {isSignUp ? <UserPlus className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
@@ -145,23 +163,33 @@ export default function LoginScreen({}: LoginScreenProps) { // <-- FIX: No props
       case 'forgot-password':
         return (
             <>
-                <h2 className="text-3xl font-bold text-center text-gray-800">Reset Password</h2>
-                <p className={`p-3 rounded-lg ${message.includes('Error') ? 'bg-red-100 text-red-700' : (message ? 'bg-green-100 text-green-700' : 'text-gray-600 bg-gray-50')}`}>
+                <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-2 flex items-center justify-center gap-2 animate-bounce-in">
+                  <span role="img" aria-label="key" className="inline-block animate-slow-pulse">🔑</span>
+                  <span>Reset Password</span>
+                  <span role="img" aria-label="lock" className="inline-block animate-slow-pulse">🔒</span>
+                </h2>
+                <p className={`p-3 rounded-lg animate-fade-in-up ${message.includes('Error') ? 'bg-red-100 text-red-700' : (message ? 'bg-green-100 text-green-700' : 'text-gray-600 bg-gray-50')}`}>
                     {message || "Enter your email address and we'll send you a recovery link."}
                 </p>
                 <form onSubmit={handlePasswordReset} className="space-y-4">
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
                         <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 
+                                       transition-all duration-200 focus:scale-[1.02]" required />
                     </div>
                     <button type="submit" disabled={loading}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg font-semibold hover:bg-yellow-600 disabled:bg-gray-400 transition">
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white bg-yellow-500 rounded-lg font-bold text-lg shadow-md
+                                   transition-all duration-300 ease-in-out 
+                                   hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:bg-yellow-600
+                                   active:scale-95 active:shadow-inner
+                                   disabled:bg-gray-400 disabled:hover:scale-100 disabled:hover:translate-y-0">
                         {loading ? 'Sending...' : ( <><MailOpen className="w-5 h-5" /> Send Reset Link</> )}
                     </button>
                     <div className="text-center text-sm pt-2">
                         <button type="button" onClick={() => { setView('sign-in'); setMessage(''); setEmail(''); }}
-                            className="text-yellow-600 hover:text-yellow-700 font-medium flex items-center justify-center gap-1 mx-auto">
+                            className="text-yellow-600 hover:text-yellow-700 font-medium flex items-center justify-center gap-1 mx-auto
+                                       transition-transform duration-200 hover:scale-110">
                             <ArrowLeft className="w-4 h-4" />
                             Back to Sign In
                         </button>
@@ -173,8 +201,10 @@ export default function LoginScreen({}: LoginScreenProps) { // <-- FIX: No props
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center p-4 
+                    animate-gradient-shimmer">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6 
+                      animate-fade-in-up">
         {renderForm()}
       </div>
     </div>
