@@ -107,11 +107,14 @@ export default function VerifyMfaPage({ onSuccess }: VerifyMfaPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8 space-y-6">
-        <h2 className="text-3xl font-bold text-center text-gray-800 flex items-center justify-center gap-2">
-          <ShieldCheck className="w-8 h-8 text-yellow-500" />
-          MFA Verification
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center p-4 
+                    animate-gradient-shimmer">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6 
+                      animate-fade-in-up">
+        <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-2 flex items-center justify-center gap-2 animate-bounce-in">
+          <ShieldCheck className="w-8 h-8 text-yellow-500 animate-slow-pulse" />
+          <span role="img" aria-label="lock" className="inline-block animate-slow-pulse">🔐</span>
+          <span>MFA Verification</span>
         </h2>
         
         <p className={`p-3 rounded-lg text-center ${message.includes('Error') || message.includes('failed') ? 'bg-red-100 text-red-700' : (message.includes('Success!') ? 'bg-green-100 text-green-700' : 'text-gray-600 bg-gray-50')}`}>

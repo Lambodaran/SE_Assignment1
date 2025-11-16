@@ -185,7 +185,7 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-8 flex flex-col items-center">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-orange-300 to-orange-400 p-4 sm:p-8 flex flex-col items-center animate-gradient-shimmer">
       
       {/* --- RENDER ANIMATIONS --- */}
       {notification && (
