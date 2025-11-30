@@ -5,7 +5,7 @@ import { ShieldCheck } from 'lucide-react';
 import { AuthMfaChallenge } from '@supabase/supabase-js';
 
 interface VerifyMfaPageProps {
-  onSuccess: () => void; // Function to tell App.tsx we are verified
+  onSuccess: () => void; 
 }
 
 export default function VerifyMfaPage({ onSuccess }: VerifyMfaPageProps) {
@@ -13,11 +13,8 @@ export default function VerifyMfaPage({ onSuccess }: VerifyMfaPageProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('Enter the 6-digit code from your authenticator app.');
   
-  // --- THIS IS THE FIX ---
-  // We must store the challenge AND the factorId separately
   const [challenge, setChallenge] = useState<AuthMfaChallenge | null>(null);
-  const [factorId, setFactorId] = useState<string | null>(null); // <-- NEW STATE
-  // --- END OF FIX ---
+  const [factorId, setFactorId] = useState<string | null>(null); 
 
   // 1. Get the list of factors and create a challenge
   useEffect(() => {
@@ -43,10 +40,7 @@ export default function VerifyMfaPage({ onSuccess }: VerifyMfaPageProps) {
         return;
       }
       
-      // --- THIS IS THE FIX ---
-      // 1. Save the factorId so we can use it later
       setFactorId(totpFactor.id); 
-      // --- END OF FIX ---
 
       // 2. Create a "challenge" for that factor
       const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
@@ -59,24 +53,21 @@ export default function VerifyMfaPage({ onSuccess }: VerifyMfaPageProps) {
         return;
       }
       
-      setChallenge(challengeData); // Save the challenge
+      setChallenge(challengeData); 
       setLoading(false);
       setMessage('Enter the 6-digit code from your authenticator app.');
     };
 
     createMfaChallenge();
-  }, []); // Empty array ensures this runs only once
+  }, []); 
 
   // 2. Handle the verification of the code
   const handleVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // --- THIS IS THE FIX ---
-    // Check for both factorId AND challenge
     if (!challenge || !factorId) { 
       setMessage('Error: No challenge created. Please refresh and try again.');
       return;
     }
-    // --- END OF FIX ---
     
     setLoading(true);
     setMessage('Verifying code...');
@@ -85,9 +76,7 @@ export default function VerifyMfaPage({ onSuccess }: VerifyMfaPageProps) {
     
     // 3. Verify the code against the challenge
     const { error } = await supabase.auth.mfa.verify({
-      // --- THIS IS THE FIX ---
-      factorId: factorId, // <-- Use our saved factorId
-      // --- END OF FIX ---
+      factorId: factorId, 
       challengeId: challenge.id,
       code: code,
     });
@@ -96,10 +85,7 @@ export default function VerifyMfaPage({ onSuccess }: VerifyMfaPageProps) {
     if (error) {
       setMessage(`Verification failed: ${error.message}`);
     } else {
-      // Success!
       setMessage('Success! Logging you in...');
-      
-      // Tell App.tsx that we are verified and it can proceed
       setTimeout(() => {
         onSuccess();
       }, 1000);
@@ -107,23 +93,38 @@ export default function VerifyMfaPage({ onSuccess }: VerifyMfaPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 flex items-center justify-center p-4 
-                    animate-gradient-shimmer">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6 
-                      animate-fade-in-up">
-        <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-2 flex items-center justify-center gap-2 animate-bounce-in">
+    // THEME UPDATE: Main Gradient Background
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4 
+                    animate-gradient-shimmer transition-colors duration-500">
+      
+      {/* THEME UPDATE: Card Background & Transitions */}
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6 
+                      animate-fade-in-up transition-colors duration-300">
+        
+        {/* THEME UPDATE: Heading Text */}
+        <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-800 dark:text-white mb-2 flex items-center justify-center gap-2 animate-bounce-in">
           <ShieldCheck className="w-8 h-8 text-yellow-500 animate-slow-pulse" />
           <span role="img" aria-label="lock" className="inline-block animate-slow-pulse">🔐</span>
           <span>MFA Verification</span>
         </h2>
         
-        <p className={`p-3 rounded-lg text-center ${message.includes('Error') || message.includes('failed') ? 'bg-red-100 text-red-700' : (message.includes('Success!') ? 'bg-green-100 text-green-700' : 'text-gray-600 bg-gray-50')}`}>
+        {/* THEME UPDATE: Message Box (Neutral state adapted for dark mode) */}
+        <p className={`p-3 rounded-lg text-center transition-colors ${
+            message.includes('Error') || message.includes('failed') 
+            ? 'bg-red-100 text-red-700' 
+            : (message.includes('Success!') 
+                ? 'bg-green-100 text-green-700' 
+                : 'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700')
+          }`}>
           {message}
         </p> 
 
         <form onSubmit={handleVerifySubmit} className="space-y-4">
           <div>
-            <label htmlFor="code" className="block text-sm font-medium text-gray-700">Verification Code</label>
+            {/* THEME UPDATE: Label Color */}
+            <label htmlFor="code" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Verification Code</label>
+            
+            {/* THEME UPDATE: Input Background, Text, and Border */}
             <input
               id="code"
               type="text"
@@ -131,7 +132,10 @@ export default function VerifyMfaPage({ onSuccess }: VerifyMfaPageProps) {
               onChange={(e) => setCode(e.target.value)}
               placeholder="123456"
               maxLength={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-center text-2xl tracking-[0.3em]"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+                         bg-white dark:bg-gray-700 dark:text-white
+                         focus:ring-yellow-500 focus:border-yellow-500 
+                         text-center text-2xl tracking-[0.3em]"
               required
             />
           </div>
@@ -139,7 +143,7 @@ export default function VerifyMfaPage({ onSuccess }: VerifyMfaPageProps) {
           <button
             type="submit"
             disabled={loading || code.length !== 6 || !challenge}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg font-semibold hover:bg-yellow-600 disabled:bg-gray-400 transition"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg font-semibold hover:bg-yellow-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 transition"
           >
             {loading ? 'Verifying...' : 'Verify'}
           </button>

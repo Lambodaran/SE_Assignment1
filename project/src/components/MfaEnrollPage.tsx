@@ -4,7 +4,7 @@ import { getSupabaseClient } from '../lib/supabaseClient';
 import { QrCode, ShieldCheck } from 'lucide-react';
 
 interface MfaEnrollPageProps {
-  onSuccess: () => void; // Tell App.tsx we are done
+  onSuccess: () => void; 
 }
 
 export default function MfaEnrollPage({ onSuccess }: MfaEnrollPageProps) {
@@ -60,19 +60,15 @@ export default function MfaEnrollPage({ onSuccess }: MfaEnrollPageProps) {
         return;
       }
 
-      // --- THIS IS THE FIX ---
-      // The 'qr_code' property is already a full data URI.
-      // We don't need to btoa() or re-format it.
       setQrCodeUrl(data.totp.qr_code);
       setFactorId(data.id); 
-      // --- END OF FIX ---
       
       setMessage('Scan the QR code with your authenticator app (e.g., Google Authenticator).');
       setLoading(false);
     };
 
     enrollMfa();
-  }, []); // Runs once on page load
+  }, []); 
 
   // 2. Verify the 6-digit code from the app
   const handleVerifySubmit = async (e: React.FormEvent) => {
@@ -82,7 +78,6 @@ export default function MfaEnrollPage({ onSuccess }: MfaEnrollPageProps) {
 
     const supabase = getSupabaseClient();
     
-    // This function "challenges" (asks for a code) and "verifies" it in one step
     const { error } = await supabase.auth.mfa.challengeAndVerify({
       factorId: factorId,
       code: code,
@@ -94,7 +89,6 @@ export default function MfaEnrollPage({ onSuccess }: MfaEnrollPageProps) {
       setMessage(`Verification failed: ${error.message}`);
     } else {
       setMessage('Success! MFA is now enabled.');
-      // Tell App.tsx that we are verified and it can proceed
       setTimeout(() => {
         onSuccess();
       }, 1000);
@@ -102,31 +96,40 @@ export default function MfaEnrollPage({ onSuccess }: MfaEnrollPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8 space-y-6">
-        <h2 className="text-3xl font-bold text-center text-gray-800 flex items-center justify-center gap-2">
+    // THEME UPDATE: Main Gradient Background
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4 transition-colors duration-500">
+      
+      {/* THEME UPDATE: Card Background & Text */}
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 space-y-6 transition-colors duration-300">
+        
+        <h2 className="text-3xl font-bold text-center text-gray-800 dark:text-white flex items-center justify-center gap-2">
           <ShieldCheck className="w-8 h-8 text-yellow-500" />
           Enable MFA
         </h2>
         
-        <p className="p-3 rounded-lg text-center text-gray-600 bg-gray-50">
+        {/* THEME UPDATE: Message Box */}
+        <p className="p-3 rounded-lg text-center text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 transition-colors">
           {message}
         </p>
 
         {/* --- QR Code Display --- */}
-        <div className="flex justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg">
+        {/* THEME UPDATE: Border Color */}
+        <div className="flex justify-center p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700/50">
           {qrCodeUrl ? (
-            <img src={qrCodeUrl} alt="MFA QR Code" className="w-48 h-48" />
+            <img src={qrCodeUrl} alt="MFA QR Code" className="w-48 h-48 rounded-md" />
           ) : (
             <div className="w-48 h-48 flex items-center justify-center">
-              <QrCode className="w-16 h-16 text-gray-400 animate-pulse" />
+              <QrCode className="w-16 h-16 text-gray-400 dark:text-gray-500 animate-pulse" />
             </div>
           )}
         </div>
 
         <form onSubmit={handleVerifySubmit} className="space-y-4">
           <div>
-            <label htmlFor="code" className="block text-sm font-medium text-gray-700">Verification Code</label>
+            {/* THEME UPDATE: Label Color */}
+            <label htmlFor="code" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Verification Code</label>
+            
+            {/* THEME UPDATE: Input Background, Text, and Border */}
             <input
               id="code"
               type="text"
@@ -134,7 +137,10 @@ export default function MfaEnrollPage({ onSuccess }: MfaEnrollPageProps) {
               onChange={(e) => setCode(e.target.value)}
               placeholder="123456"
               maxLength={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-center text-2xl tracking-[0.3em]"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+                         bg-white dark:bg-gray-700 dark:text-white
+                         focus:ring-yellow-500 focus:border-yellow-500 
+                         text-center text-2xl tracking-[0.3em]"
               required
             />
           </div>
@@ -142,7 +148,7 @@ export default function MfaEnrollPage({ onSuccess }: MfaEnrollPageProps) {
           <button
             type="submit"
             disabled={loading || code.length !== 6 || !qrCodeUrl}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg font-semibold hover:bg-yellow-600 disabled:bg-gray-400 transition"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-white bg-yellow-500 rounded-lg font-semibold hover:bg-yellow-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 transition"
           >
             {loading ? 'Verifying...' : 'Enable and Continue'}
           </button>
