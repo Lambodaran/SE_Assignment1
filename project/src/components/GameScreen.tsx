@@ -23,9 +23,8 @@ interface Question {
   answerToken: string;
 }
 
-// Add a unique, stable 'id' to the notification
 type Notification = {
-  id: number; // <-- ADD THIS
+  id: number;
   type: 'correct' | 'wrong' | 'combo';
   message: string;
 } | null;
@@ -57,9 +56,8 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
   const handleLifeLoss = (reason: string) => {
     if (!isGameActive || submissionRef.current) return;
 
-    // ADD ID TO NOTIFICATION
     setNotification({ id: new Date().getTime(), type: 'wrong', message: reason });
-    setComboCount(0); // Reset combo
+    setComboCount(0); 
 
     const newLives = lives - 1;
     setLives(newLives);
@@ -135,20 +133,16 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
       if (error) throw new Error(error.message);
 
       if (data.correct) {
-        // --- CORRECT GUESS ---
         const newComboCount = comboCount + 1;
         setComboCount(newComboCount);
 
         let pointsToAdd = 10; 
         
-        // Check for COMBO
         if (newComboCount > 0 && newComboCount % 3 === 0) {
           const comboNum = newComboCount / 3;
           pointsToAdd += 10; 
-          // ADD ID TO NOTIFICATION
           setNotification({ id: new Date().getTime(), type: 'combo', message: `COMBO x${comboNum}!` });
         } else {
-          // ADD ID TO NOTIFICATION
           setNotification({ id: new Date().getTime(), type: 'correct', message: `+${pointsToAdd}` });
         }
 
@@ -168,7 +162,6 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
         }, 1200); 
 
       } else {
-        // --- WRONG GUESS ---
         handleLifeLoss('Wrong!'); 
       }
     } catch (error: any) {
@@ -185,11 +178,10 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-orange-300 to-orange-400 p-4 sm:p-8 flex flex-col items-center animate-gradient-shimmer">
+    // THEME UPDATE: Dark Gradient
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-orange-300 to-orange-400 dark:from-gray-900 dark:to-gray-800 p-4 sm:p-8 flex flex-col items-center animate-gradient-shimmer transition-colors duration-500">
       
-      {/* --- RENDER ANIMATIONS --- */}
       {notification && (
-        // --- USE THE STABLE ID AS THE KEY ---
         <GameNotification
           key={notification.id} 
           type={notification.type}
@@ -204,39 +196,36 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
           onComplete={() => setShowLevelUp(false)}
         />
       )}
-      {/* ------------------------- */}
 
-      
-      {/* Header and Status */}
-      <div className="w-full max-w-4xl bg-white p-4 rounded-xl shadow-lg mb-6">
+      {/* THEME UPDATE: Header Card */}
+      <div className="w-full max-w-4xl bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg mb-6 transition-colors duration-300">
         <div className="flex justify-between items-center flex-wrap gap-4">
-          <div className="text-gray-700">
+          <div className="text-gray-700 dark:text-gray-200">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Banana className="w-5 h-5 text-yellow-600" />
               Banana Brain Challenge
             </h2>
-            <p className="text-sm font-medium capitalize text-gray-500">
+            <p className="text-sm font-medium capitalize text-gray-500 dark:text-gray-400">
                 Level: <span className={`font-semibold ${difficulty === 'hard' ? 'text-red-500' : difficulty === 'medium' ? 'text-yellow-500' : 'text-green-500'}`}>{difficulty}</span>
             </p>
           </div>
           
           <div className="flex items-center gap-4 sm:gap-6">
              <div className="text-center">
-                <p className="text-lg font-bold text-gray-800">{score}</p>
-                <p className="text-xs text-gray-500">Score</p>
+                <p className="text-lg font-bold text-gray-800 dark:text-white">{score}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Score</p>
              </div>
              
              <div className="text-center">
                 <div className="flex justify-center items-center gap-1 h-6">
-                    <Heart className={`w-6 h-6 ${lives >= 1 ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} />
-                    <Heart className={`w-6 h-6 ${lives >= 2 ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} />
-                    <Heart className={`w-6 h-6 ${lives >= 3 ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} />
+                    <Heart className={`w-6 h-6 ${lives >= 1 ? 'text-red-500 fill-red-500' : 'text-gray-300 dark:text-gray-600'}`} />
+                    <Heart className={`w-6 h-6 ${lives >= 2 ? 'text-red-500 fill-red-500' : 'text-gray-300 dark:text-gray-600'}`} />
+                    <Heart className={`w-6 h-6 ${lives >= 3 ? 'text-red-500 fill-red-500' : 'text-gray-300 dark:text-gray-600'}`} />
                 </div>
-                <p className="text-xs text-gray-500">Lives</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Lives</p>
              </div>
           </div>
           
-          {/* Timer */}
           <div className={`flex items-center text-white p-3 rounded-lg font-bold shadow-md ${getTimerColor()}`}>
             <Timer className="w-5 h-5 mr-2" />
             <span className="text-2xl w-8 text-right">{timeLeft}s</span>
@@ -244,24 +233,23 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
         </div>
       </div>
       
-      {/* Message Area (Only shows Game Over message now) */}
       {message && (
         <div className={`w-full max-w-4xl p-3 text-center rounded-lg mb-6 text-white font-semibold shadow-md bg-red-500`}>
           {message}
         </div>
       )}
 
-      {/* Game Area */}
-      <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-lg">
+      {/* THEME UPDATE: Game Area Card */}
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg transition-colors duration-300">
         {(isLoading || !isGameActive) && lives > 0 ? (
           <div className="flex flex-col items-center justify-center h-64">
             <Brain className="w-16 h-16 text-yellow-500 animate-pulse" />
-            <p className="mt-4 text-gray-600">Loading new challenge...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-300">Loading new challenge...</p>
           </div>
         ) : question && isGameActive ? (
           <form onSubmit={handleGuessSubmit} className="flex flex-col items-center">
             
-            <div className="w-full mb-4 rounded-lg overflow-hidden shadow-md border-4 border-gray-200">
+            <div className="w-full mb-4 rounded-lg overflow-hidden shadow-md border-4 border-gray-200 dark:border-gray-600">
               <img 
                 src={question.image} 
                 alt="Banana Challenge" 
@@ -269,14 +257,15 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
               />
             </div>
             
-            <p className="mb-4 text-lg font-semibold text-gray-700">What is the solution?</p>
+            <p className="mb-4 text-lg font-semibold text-gray-700 dark:text-gray-200">What is the solution?</p>
             
+            {/* THEME UPDATE: Input Styling */}
             <input 
               type="number" 
               value={userGuess}
               onChange={(e) => setUserGuess(e.target.value)}
               disabled={!isGameActive || isLoading}
-              className="w-full max-w-xs text-center text-2xl font-bold p-3 rounded-lg border-2 border-gray-300 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+              className="w-full max-w-xs text-center text-2xl font-bold p-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
               placeholder="Enter number"
             />
             
@@ -292,18 +281,15 @@ export default function GameScreen({ playerName, difficulty, onGameEnd }: GameSc
         ) : (
           <div className="flex flex-col items-center justify-center h-64">
              <Brain className="w-16 h-16 text-red-500" />
-             <p className="mt-4 text-xl font-bold text-gray-700">{message || "Error: No question loaded."}</p>
+             <p className="mt-4 text-xl font-bold text-gray-700 dark:text-gray-200">{message || "Error: No question loaded."}</p>
           </div>
         )}
       </div>
       
-      {/* --- THIS IS THE FIX --- */}
-      {/* The </p> tag was missing, and it was inside the <div> */}
-      <p className="mt-8 text-sm text-gray-500">
-        You are playing as: <span className="font-semibold text-gray-700">{playerName}</span>
+      <p className="mt-8 text-sm text-gray-500 dark:text-gray-400">
+        You are playing as: <span className="font-semibold text-gray-700 dark:text-gray-300">{playerName}</span>
       </p>
-      {/* ------------------------- */}
 
-    </div> // This is the main closing div, it was correct
+    </div> 
   );
 }

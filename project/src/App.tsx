@@ -4,7 +4,7 @@ import { Session, SupabaseClient, AuthUser } from '@supabase/supabase-js';
 import { getSupabaseClient, DifficultyLevel } from './lib/supabaseClient'; 
 
 // Component Imports
-import LandingPage from './components/LandingPage'; // <-- ADDED
+import LandingPage from './components/LandingPage'; 
 import StartScreen from './components/StartScreen';
 import GameScreen from './components/GameScreen';
 import LeaderboardScreen from './components/LeaderboardScreen';
@@ -14,8 +14,11 @@ import VerifyMfaPage from './components/VerifyMfaPage';
 import MfaEnrollPage from './components/MfaEnrollPage'; 
 import { submitScore } from './services/leaderboardService';
 
+// --- NEW IMPORTS (From components folder as requested) ---
+import { ThemeProvider } from './components/ThemeContext';
+import ThemeToggle from './components/ThemeToggle';
+
 // --- TYPE DEFINITIONS ---
-// Added 'landing' state
 type AppState = 'landing' | 'auth' | 'enroll-mfa' | 'verify-mfa' | 'start' | 'playing' | 'leaderboard' | 'update-password'; 
 
 interface GameConfig {
@@ -28,7 +31,6 @@ interface GameConfig {
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
-  // Set 'landing' as the initial state
   const [appState, setAppState] = useState<AppState>('landing');
   const [loading, setLoading] = useState(true);
 
@@ -38,8 +40,7 @@ function App() {
     finalScore: 0,
   });
 
-  // --- NEW: MFA CHECK LOGIC ---
-  // (This function is unchanged from your version)
+  // --- MFA CHECK LOGIC ---
   const checkMfaStatus = async (client: SupabaseClient, user: AuthUser) => {
     setLoading(true);
     
@@ -76,7 +77,7 @@ function App() {
   };
 
 
-  // --- AUTH LOGIC (MODIFIED) ---
+  // --- AUTH LOGIC ---
   useEffect(() => {
     // Check for password reset URL first
     if (window.location.pathname === '/update-password') {
@@ -106,7 +107,6 @@ function App() {
       }
     });
 
-    // --- FIX: This listener now handles BOTH login and logout ---
     const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
       if (window.location.pathname !== '/update-password') {
         setSession(session);
@@ -122,10 +122,8 @@ function App() {
     });
 
     return () => subscription.unsubscribe();
-  }, []); // Empty array, runs once on load
+  }, []); 
 
-  
-  // --- handleAuthSuccess is no longer needed ---
   
   // Called by VerifyMfaPage OR MfaEnrollPage on success
   const handleMfaSuccess = () => {
@@ -138,7 +136,7 @@ function App() {
     setAppState('auth');
   };
 
-  // --- ADDED: Handler for the landing page button ---
+  // Handler for the landing page button
   const handleLoginClick = () => {
     setAppState('auth');
   };
@@ -151,7 +149,6 @@ function App() {
     }
   };
 
-  // ... (Rest of your handlers: handleStartGame, handleGameEnd, etc. are all unchanged) ...
   // Handle game start
   const handleStartGame = (difficulty: DifficultyLevel) => {
     const userId = session?.user?.id;
@@ -203,61 +200,69 @@ function App() {
   // --- RENDER LOGIC ---
 
   if (loading || !supabase) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-100 text-gray-700 text-xl">Loading Session...</div>;
+    // Added dark mode support to loading screen
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-200 text-xl">Loading Session...</div>;
   }
   
   const user = session?.user; 
 
   return (
-    <>
-      {/* --- ADDED: Render the LandingPage --- */}
-      {appState === 'landing' && (
-        <LandingPage onLoginClick={handleLoginClick} />
-      )}
-      
-      {/* State 0: Update Password */}
-      {appState === 'update-password' && (
-        <UpdatePasswordPage onSuccess={handlePasswordUpdateSuccess} />
-      )}
-    
-      {/* State 1: Authentication */}
-      {/* --- FIX: Removed onSuccess prop --- */}
-      {appState === 'auth' && <LoginScreen />} 
-      
-      {/* State 2: MFA Enrollment (NEW) */}
-      {appState === 'enroll-mfa' && user && <MfaEnrollPage onSuccess={handleMfaSuccess} />}
+    <ThemeProvider>
+      {/* Wrapper div to apply background color to the whole app based on theme.
+         ThemeToggle is placed here so it floats above all other screens.
+      */}
+      <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        
+        <ThemeToggle />
 
-      {/* State 3: MFA Verification */}
-      {appState === 'verify-mfa' && user && <VerifyMfaPage onSuccess={handleMfaSuccess} />}
+        {/* State 0: Landing Page */}
+        {appState === 'landing' && (
+          <LandingPage onLoginClick={handleLoginClick} />
+        )}
+        
+        {/* State 1: Update Password */}
+        {appState === 'update-password' && (
+          <UpdatePasswordPage onSuccess={handlePasswordUpdateSuccess} />
+        )}
       
-      {/* State 4: Start Screen (Requires fully verified user) */}
-      {appState === 'start' && user && (
-        <StartScreen 
-            onStart={handleStartGame} 
-            onLogout={handleLogout} 
-        />
-      )}
-      
-      {/* State 5: Playing (Requires fully verified user) */}
-      {appState === 'playing' && user && (
-        <GameScreen
-          playerName={user.email || 'Player'} 
-          difficulty={gameConfig.difficulty}
-          onGameEnd={handleGameEnd}
-        />
-      )}
-      
-      {/* State 6: Leaderboard (Requires fully verified user) */}
-      {appState === 'leaderboard' && user && (
-        <LeaderboardScreen
-          playerName={user.email || 'Guest'} 
-          finalScore={gameConfig.finalScore}
-          difficulty={gameConfig.difficulty}
-          onPlayAgain={handlePlayAgain}
-          onMainMenu={handleMainMenu}
-        />
-      )}
-    </>
+        {/* State 2: Authentication */}
+        {appState === 'auth' && <LoginScreen />} 
+        
+        {/* State 3: MFA Enrollment */}
+        {appState === 'enroll-mfa' && user && <MfaEnrollPage onSuccess={handleMfaSuccess} />}
+
+        {/* State 4: MFA Verification */}
+        {appState === 'verify-mfa' && user && <VerifyMfaPage onSuccess={handleMfaSuccess} />}
+        
+        {/* State 5: Start Screen */}
+        {appState === 'start' && user && (
+          <StartScreen 
+              onStart={handleStartGame} 
+              onLogout={handleLogout} 
+          />
+        )}
+        
+        {/* State 6: Playing */}
+        {appState === 'playing' && user && (
+          <GameScreen
+            playerName={user.email || 'Player'} 
+            difficulty={gameConfig.difficulty}
+            onGameEnd={handleGameEnd}
+          />
+        )}
+        
+        {/* State 7: Leaderboard */}
+        {appState === 'leaderboard' && user && (
+          <LeaderboardScreen
+            playerName={user.email || 'Guest'} 
+            finalScore={gameConfig.finalScore}
+            difficulty={gameConfig.difficulty}
+            onPlayAgain={handlePlayAgain}
+            onMainMenu={handleMainMenu}
+          />
+        )}
+      </div>
+    </ThemeProvider>
   );
 }
 

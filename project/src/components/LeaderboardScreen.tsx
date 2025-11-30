@@ -86,7 +86,8 @@ export default function LeaderboardScreen({
         ${
           selectedTab === label
             ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-md scale-105"
-            : "bg-white/40 text-gray-700 hover:bg-white/70"
+            // THEME UPDATE: Darker inactive state
+            : "bg-white/40 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-gray-600"
         }
       `}
     >
@@ -99,15 +100,15 @@ export default function LeaderboardScreen({
     <>
       {showTop3 && <Top3Animation onComplete={() => setShowTop3(false)} />}
 
-      {/* CLEAN YELLOW THEME BACKGROUND */}
+      {/* THEME UPDATE: Main Gradient Background */}
       <div 
-        className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 
-                   flex items-center justify-center p-4"
+        className="min-h-screen bg-gradient-to-br from-yellow-300 to-orange-400 dark:from-gray-900 dark:to-gray-800 
+                   flex items-center justify-center p-4 transition-colors duration-500"
       >
 
-        {/* Main Container */}
-        <div className="w-full max-w-3xl bg-white/95 backdrop-blur-md 
-                        rounded-2xl shadow-2xl p-6 relative border border-white/20">
+        {/* THEME UPDATE: Main Card Container */}
+        <div className="w-full max-w-3xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-md 
+                        rounded-2xl shadow-2xl p-6 relative border border-white/20 dark:border-gray-700 transition-colors duration-300">
 
           {/* Header */}
           <div className="text-center mb-6">
@@ -122,8 +123,9 @@ export default function LeaderboardScreen({
           {/* Player Score */}
           <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-500 
                           p-1 rounded-2xl mb-6 shadow-2xl">
-            <div className="bg-white rounded-xl p-6">
-              <div className="text-lg sm:text-xl text-gray-700 font-medium mb-2">
+            {/* THEME UPDATE: Inner score card */}
+            <div className="bg-white dark:bg-gray-700 rounded-xl p-6 transition-colors duration-300">
+              <div className="text-lg sm:text-xl text-gray-700 dark:text-gray-200 font-medium mb-2">
                 Your Score, <span className="font-bold">{playerName}</span>:
               </div>
               <p className="text-5xl sm:text-6xl font-black 
@@ -141,8 +143,8 @@ export default function LeaderboardScreen({
             {TabButton("hard")}
           </div>
 
-          {/* Leaderboard Table */}
-          <div className="space-y-3 bg-gray-50 rounded-xl p-4 shadow-inner">
+          {/* THEME UPDATE: Leaderboard Table Container */}
+          <div className="space-y-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 shadow-inner transition-colors duration-300">
 
             {loading && (
               <div className="flex justify-center h-40 items-center">
@@ -159,7 +161,8 @@ export default function LeaderboardScreen({
             )}
 
             {!loading && !error && (
-              <ol className="divide-y divide-gray-200">
+              // THEME UPDATE: Divider color
+              <ol className="divide-y divide-gray-200 dark:divide-gray-700">
                 {scores.map((score, index) => (
                   <li
                     key={score.id}
@@ -168,10 +171,12 @@ export default function LeaderboardScreen({
                         score.player_name === playerName &&
                         score.score === finalScore &&
                         selectedTab === difficulty
-                          ? "bg-yellow-100 border-2 border-yellow-400 shadow-lg scale-[102%]"
+                          // THEME UPDATE: Active Player Highlight
+                          ? "bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400 dark:border-yellow-500 shadow-lg scale-[102%]"
                           : index < 3
-                          ? "bg-white shadow-sm"
-                          : "bg-white/70"
+                          // THEME UPDATE: Top 3 vs Others
+                          ? "bg-white dark:bg-gray-800 shadow-sm"
+                          : "bg-white/70 dark:bg-gray-800/70"
                       }
                     `}
                   >
@@ -183,12 +188,14 @@ export default function LeaderboardScreen({
                         : index + 1}
                       </span>
 
-                      <span className="truncate font-semibold text-gray-800">
+                      {/* THEME UPDATE: Player Name */}
+                      <span className="truncate font-semibold text-gray-800 dark:text-gray-200">
                         {score.player_name}
                       </span>
                     </div>
 
-                    <span className="text-2xl font-black text-gray-700">
+                    {/* THEME UPDATE: Score Text */}
+                    <span className="text-2xl font-black text-gray-700 dark:text-white">
                       {score.score}
                     </span>
                   </li>
@@ -198,8 +205,8 @@ export default function LeaderboardScreen({
 
             {!loading && !error && scores.length === 0 && (
               <div className="text-center py-10">
-                <Trophy className="w-16 h-16 text-gray-300 mx-auto" />
-                <p className="text-gray-500 text-lg font-medium mt-4">
+                <Trophy className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto" />
+                <p className="text-gray-500 dark:text-gray-400 text-lg font-medium mt-4">
                   No scores yet for this level.
                 </p>
               </div>
@@ -218,10 +225,11 @@ export default function LeaderboardScreen({
               Play Again
             </button>
 
+            {/* THEME UPDATE: Main Menu Button */}
             <button
               onClick={onMainMenu}
-              className="flex-1 px-6 py-4 bg-gray-900 text-white font-bold 
-                         rounded-xl shadow-lg hover:scale-105 transition-all"
+              className="flex-1 px-6 py-4 bg-gray-900 dark:bg-gray-700 text-white font-bold 
+                         rounded-xl shadow-lg hover:scale-105 transition-all hover:bg-gray-800 dark:hover:bg-gray-600"
             >
               <Home className="inline-block w-5 h-5 mr-2" />
               Main Menu
