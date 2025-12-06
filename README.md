@@ -1,6 +1,6 @@
 # CIS046-3: Software for Enterprise – Assignment 1
 
-**Student:** V. Lambodaran (2525922)  
+**Student:** V. Lambodaran
 **Date:** November 2025 (Week 8)  
 
 This repository contains the source code and supporting materials for **Assignment 1** of *CIS046-3 Software for Enterprise*.  
